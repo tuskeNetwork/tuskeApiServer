@@ -176,11 +176,39 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%d", total)
 }
 
+func handlerSupply(w http.ResponseWriter, r *http.Request) {
+	cacheMutex.Lock()
+	defer cacheMutex.Unlock()
+	if time.Since(lastUpdateTime) > 5*time.Minute {
+		http.Error(w, "Cache is outdated", http.StatusInternalServerError)
+		return
+	}
+
+	//w.Header().Set("Content-Type", "application/json")
+	//json.NewEncoder(w).Encode(cache)
+
+	// sum emission_amount and fee_amount
+	total := float64(cache.Result.EmissionAmount+cache.Result.FeeAmount) / 1e12
+
+	//first airdrop 500 * 5 TSK
+	//twitter task + discord task 7000 TSK
+	firstAirdrop := float64(9500)
+	total = total + firstAirdrop
+
+	responseData := map[string]string{
+		"result": fmt.Sprintf("%.12f", total),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
 func main() {
 
 	go updateCache()
 
-	http.HandleFunc("/circulation", handler)
+	http.HandleFunc("/circulation", handler) //for xeggex
+	http.HandleFunc("/supply", handlerSupply)
 
 	fmt.Println("Starting server on 127.0.0.1:8086")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8086", nil))

@@ -176,7 +176,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%d", total)
 }
 
-func handlerSupply(w http.ResponseWriter, r *http.Request) {
+func CirculatingSupply(w http.ResponseWriter, r *http.Request) {
 	cacheMutex.Lock()
 	defer cacheMutex.Unlock()
 	if time.Since(lastUpdateTime) > 5*time.Minute {
@@ -203,12 +203,36 @@ func handlerSupply(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
+func TotalSupply(w http.ResponseWriter, r *http.Request) {
+	cacheMutex.Lock()
+	defer cacheMutex.Unlock()
+	if time.Since(lastUpdateTime) > 5*time.Minute {
+		http.Error(w, "Cache is outdated", http.StatusInternalServerError)
+		return
+	}
+
+	// sum emission_amount and fee_amount
+	total := float64(cache.Result.EmissionAmount+cache.Result.FeeAmount) / 1e12
+
+	//block 0 reward: 553402.319999999949
+	initBlockReward := 553402.319999999949
+	total = total + initBlockReward
+
+	responseData := map[string]string{
+		"result": fmt.Sprintf("%.12f", total),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
 func main() {
 
 	go updateCache()
 
 	http.HandleFunc("/circulation", handler) //for xeggex
-	http.HandleFunc("/supply", handlerSupply)
+	http.HandleFunc("/CirculatingSupply", CirculatingSupply)
+	http.HandleFunc("/TotalSupply", TotalSupply)
 
 	fmt.Println("Starting server on 127.0.0.1:8086")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8086", nil))

@@ -170,7 +170,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//first airdrop 500 * 5 TSK
 	//twitter task + discord task 7000 TSK
 	//dev team reward first month 5000 TSK
-	released := uint64(2500 + 7000 + 5000)
+	//dev team reward second month 5000 TSK
+	released := uint64(2500 + 7000 + 5000 + 5000)
 	total = total + released
 
 	w.Header().Set("Content-Type", "application/json")
@@ -194,7 +195,8 @@ func CirculatingSupply(w http.ResponseWriter, r *http.Request) {
 	//first airdrop 500 * 5 TSK
 	//twitter task + discord task 7000 TSK
 	//dev team reward first month 5000 TSK
-	released := float64(2500 + 7000 + 5000)
+	//dev team reward second month 5000 TSK
+	released := float64(2500 + 7000 + 5000 + 5000)
 	total = total + released
 
 	responseData := map[string]string{
